@@ -171,7 +171,7 @@ resource "aws_db_proxy" "main" {
   idle_client_timeout    = 1800
   require_tls            = false
   role_arn               = data.aws_iam_role.labrole[0].arn
-  vpc_subnet_ids         = module.vpc_ext.app_subnet_ids # Lo ponemos donde viven las apps
+  vpc_subnet_ids         = module.vpc_ext.db_subnet_ids # Lo ponemos donde viven las apps
   vpc_security_group_ids = [aws_security_group.proxy_sg.id]
 
   auth {
@@ -245,7 +245,7 @@ resource "aws_lambda_invocation" "invoke_dbinit" {
 
 resource "aws_vpc_endpoint" "secretsmanager" {
   vpc_id            = module.vpc_ext.vpc_id
-  service_name      = "com.amazonaws.us-east-1.secretsmanager" # Ojo: cambia us-east-1 por tu región (var.region)
+  service_name      = "com.amazonaws.${var.aws_region}.secretsmanager" # Ojo: cambia us-east-1 por tu región (var.region)
   vpc_endpoint_type = "Interface"
   subnet_ids        = module.vpc_ext.app_subnet_ids # Las mismas subnets donde vive el Proxy
 
