@@ -27,7 +27,7 @@ variable "website_bucket_name" {
   description = "Nombre del bucket website (único global). Si vacío, usa <project>-web"
   default     = ""
 }
-  
+
 # DB
 variable "db_username" {
   type    = string

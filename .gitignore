@@ -13,3 +13,6 @@ crash.log
 # Local Terraform metadata
 .terraform/
 .terraform.lock.hcl
+
+node_modules
+modules/lambdas_api/.zips/

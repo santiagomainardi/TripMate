@@ -109,7 +109,7 @@ resource "aws_secretsmanager_secret" "proxy_db_creds" {
 }
 
 resource "aws_secretsmanager_secret_version" "proxy_db_creds_val" {
-  secret_id     = aws_secretsmanager_secret.proxy_db_creds.id
+  secret_id = aws_secretsmanager_secret.proxy_db_creds.id
   secret_string = jsonencode({
     username = var.db_username
     password = var.db_password
@@ -126,16 +126,16 @@ resource "aws_security_group" "proxy_sg" {
   ingress {
     from_port       = 3306
     to_port         = 3306
-    protocol        = "tcp" 
+    protocol        = "tcp"
     security_groups = [module.vpc_ext.sg_lambda_id]
     description     = "MySQL desde Lambdas"
   }
 
   # Salida: El Proxy habla con la RDS
   egress {
-    from_port   = 3306
-    to_port     = 3306
-    protocol    = "tcp"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
     security_groups = [module.vpc_ext.sg_rds_id] # al SG de la RDS
     description     = "Conexion a RDS MySQL"
   }
@@ -199,6 +199,25 @@ resource "aws_db_proxy_target" "target" {
   db_instance_identifier = module.rds_mysql.id
 }
 
+# Politica para permitir que LabRole lea el secret del Proxy
+resource "aws_secretsmanager_secret_policy" "proxy_access" {
+  secret_arn = aws_secretsmanager_secret.proxy_db_creds.arn
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Sid       = "AllowLabRoleSecretRead",
+      Effect    = "Allow",
+      Principal = { AWS = data.aws_iam_role.labrole[0].arn },
+      Action = [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+      ],
+      Resource = aws_secretsmanager_secret.proxy_db_creds.arn
+    }]
+  })
+}
+
 # 1. Esperar 30 segundos despues de que el Proxy esté "listo"
 # Esto da tiempo a que los DNS se propaguen y el Proxy acepte conexiones.
 resource "time_sleep" "wait_for_proxy" {
@@ -225,10 +244,10 @@ resource "aws_lambda_invocation" "invoke_dbinit" {
 ##########################################
 
 resource "aws_vpc_endpoint" "secretsmanager" {
-  vpc_id              = module.vpc_ext.vpc_id
-  service_name        = "com.amazonaws.us-east-1.secretsmanager" # Ojo: cambia us-east-1 por tu región (var.region)
-  vpc_endpoint_type   = "Interface"
-  subnet_ids          = module.vpc_ext.app_subnet_ids # Las mismas subnets donde vive el Proxy
+  vpc_id            = module.vpc_ext.vpc_id
+  service_name      = "com.amazonaws.us-east-1.secretsmanager" # Ojo: cambia us-east-1 por tu región (var.region)
+  vpc_endpoint_type = "Interface"
+  subnet_ids        = module.vpc_ext.app_subnet_ids # Las mismas subnets donde vive el Proxy
 
   security_group_ids = [
     aws_security_group.vpce_sg.id
