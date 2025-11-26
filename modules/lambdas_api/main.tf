@@ -170,7 +170,7 @@ resource "aws_lambda_function" "callback" {
 resource "aws_lambda_function" "dbinit" {
   function_name = "${var.project}-dbinit"
   role          = var.lambda_role_arn != null ? var.lambda_role_arn : aws_iam_role.lambda_role[0].arn
-
+  
   handler = "index.handler"
   runtime = "nodejs20.x"
 

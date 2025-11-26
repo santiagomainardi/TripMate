@@ -31,7 +31,7 @@ resource "aws_security_group" "lambda" {
     to_port     = 0
     protocol    = "-1"
     # Permite tráfico a la red interna (RDS Proxy, Secrets Manager)
-    cidr_blocks = ["10.0.0.0/16"]
+    cidr_blocks = [module.vpc.vpc_cidr_block]
     # Permite tráfico a S3 a través del Gateway Endpoint (Sin esto, S3 falla)
     prefix_list_ids = [aws_vpc_endpoint.s3_gateway.prefix_list_id]
   }
